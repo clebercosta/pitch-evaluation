@@ -2,7 +2,6 @@
   "name": "pitch-evaluation-framework",
   "version": "1.0.0",
   "private": true,
-  "type": "module",
   "scripts": {
     "dev": "npx vite",
     "build": "npx vite build",

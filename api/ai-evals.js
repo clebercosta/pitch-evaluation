@@ -1,10 +1,11 @@
-import { Redis } from '@upstash/redis'
+const { Redis } = require('@upstash/redis')
+
 const kv = new Redis({
   url: process.env.KV_REST_API_URL,
   token: process.env.KV_REST_API_TOKEN,
 })
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
@@ -17,7 +18,7 @@ export default async function handler(req, res) {
 
   if (req.method === 'POST') {
     const { projectId, aiResult } = req.body
-    if (!projectId || !aiResult) return res.status(400).json({ error: 'Missing projectId or aiResult' })
+    if (!projectId || !aiResult) return res.status(400).json({ error: 'Missing data' })
     const all = await kv.get('pef:aiEvals') || {}
     all[projectId] = aiResult
     await kv.set('pef:aiEvals', all)

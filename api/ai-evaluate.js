@@ -1,12 +1,11 @@
-import { Redis } from '@upstash/redis'
+const { Redis } = require('@upstash/redis')
+
 const kv = new Redis({
   url: process.env.KV_REST_API_URL,
   token: process.env.KV_REST_API_TOKEN,
 })
 
-export const config = { maxDuration: 30 } // Vercel Pro: até 300s
-
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
@@ -16,12 +15,12 @@ export default async function handler(req, res) {
   const project = req.body
   if (!project?.id) return res.status(400).json({ error: 'Missing project' })
 
-  // verifica se já existe avaliação para este projeto
+  // retorna cache se já existe
   const existing = await kv.get('pef:aiEvals') || {}
   if (existing[project.id]) return res.status(200).json(existing[project.id])
 
   const systemPrompt = `Você é um avaliador especialista em venture capital e inovação.
-Avalie o business project nos 15 critérios abaixo com escala 1-5.
+Avalie o business project nos 15 critérios com escala 1-5.
 1=Insuficiente | 2=Abaixo do esperado | 3=Adequado | 4=Bom | 5=Excepcional
 Retorne APENAS JSON válido, sem markdown, sem texto adicional.`
 
@@ -30,7 +29,6 @@ PROJETO: ${project.projectName}
 DONO: ${project.ownerName}
 SETOR: ${project.sector} | ESTÁGIO: ${project.stage} | MERCADO: ${project.targetMarket}
 CAPTAÇÃO: ${project.askAmount}
-
 PROBLEMA: ${project.problem}
 SOLUÇÃO: ${project.solution}
 MERCADO: ${project.market}
@@ -41,13 +39,9 @@ FINANCEIRO: ${project.financials}
 Retorne exatamente este JSON:
 {
   "scores": {
-    "p1":3,"p2":3,"p3":3,
-    "s1":3,"s2":3,
-    "m1":3,"m2":3,
-    "n1":3,"n2":3,
-    "t1":3,"t2":3,
-    "v1":3,"v2":3,
-    "f1":3,"f2":3
+    "p1":3,"p2":3,"p3":3,"s1":3,"s2":3,
+    "m1":3,"m2":3,"n1":3,"n2":3,
+    "t1":3,"t2":3,"v1":3,"v2":3,"f1":3,"f2":3
   },
   "notes": {
     "pros": "texto",
@@ -89,8 +83,6 @@ Retorne exatamente este JSON:
       if (!jsonMatch) { lastError = 'JSON não encontrado'; continue }
 
       const parsed = JSON.parse(jsonMatch[0])
-
-      // sanitiza scores
       const KEYS = ['p1','p2','p3','s1','s2','m1','m2','n1','n2','t1','t2','v1','v2','f1','f2']
       for (const k of KEYS) {
         const v = Number(parsed.scores?.[k])
@@ -99,7 +91,6 @@ Retorne exatamente este JSON:
       if (!Array.isArray(parsed.notes?.highlights)) parsed.notes.highlights = []
       if (!Array.isArray(parsed.notes?.lowlights))  parsed.notes.lowlights  = []
 
-      // persiste no KV
       const allAI = await kv.get('pef:aiEvals') || {}
       allAI[project.id] = parsed
       await kv.set('pef:aiEvals', allAI)
@@ -112,7 +103,6 @@ Retorne exatamente este JSON:
     }
   }
 
-  // fallback
   const fallback = {
     scores: Object.fromEntries(['p1','p2','p3','s1','s2','m1','m2','n1','n2','t1','t2','v1','v2','f1','f2'].map(k => [k, 3])),
     notes: {
@@ -120,8 +110,8 @@ Retorne exatamente este JSON:
       cons: 'Não foi possível gerar análise automática.',
       objections: '—',
       general: `Erro: ${lastError}`,
-      highlights: ['Análise IA não disponível para este projeto'],
-      lowlights: ['Tente re-submeter ou avalie manualmente'],
+      highlights: ['Análise IA não disponível'],
+      lowlights: ['Tente re-submeter o projeto'],
     }
   }
   return res.status(200).json(fallback)
