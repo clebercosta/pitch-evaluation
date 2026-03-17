@@ -5,11 +5,8 @@ export default defineConfig({
   plugins: [react()],
   build: {
     rollupOptions: {
-      external: [],
+      external: ['@upstash/redis']
     }
-  },
-  optimizeDeps: {
-    exclude: ['@upstash/redis']
   },
   server: {
     proxy: {
