@@ -6,13 +6,21 @@ export const api = {
     return r.json()
   },
   async saveConfig(config) {
-    await fetch('/api/config', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ config }) })
+    await fetch('/api/config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ config })
+    })
   },
   async savePhase(phase) {
-    await fetch('/api/config', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ phase }) })
+    await fetch('/api/config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phase })
+    })
   },
   async reset() {
-    await fetch('/api/config', { method:'DELETE' })
+    await fetch('/api/config', { method: 'DELETE' })
   },
 
   // Projects
@@ -21,7 +29,11 @@ export const api = {
     return r.json()
   },
   async addProject(project) {
-    await fetch('/api/projects', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(project) })
+    await fetch('/api/projects', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(project)
+    })
   },
 
   // Evaluations
@@ -30,7 +42,11 @@ export const api = {
     return r.json()
   },
   async addEvaluation(evaluation) {
-    await fetch('/api/evaluations', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(evaluation) })
+    await fetch('/api/evaluations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(evaluation)
+    })
   },
 
   // AI evaluations
@@ -38,8 +54,19 @@ export const api = {
     const r = await fetch('/api/ai-evals')
     return r.json()
   },
+  async addAIEval(projectId, aiResult) {
+    await fetch('/api/ai-evals', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ projectId, aiResult })
+    })
+  },
   async runAIEval(project) {
-    const r = await fetch('/api/ai-evaluate', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(project) })
+    const r = await fetch('/api/ai-evaluate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(project)
+    })
     return r.json()
   },
 }
